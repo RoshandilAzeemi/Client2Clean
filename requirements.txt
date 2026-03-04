@@ -4,3 +4,4 @@ streamlit
 rapidfuzz
 pydantic
 altair==4.2.2
+standard-imghdr==3.13.0
