@@ -23,17 +23,23 @@ class ClientRecord(BaseModel):
         return digits
 
 
-def dataframe_for_display(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert DataFrame to dtypes safe for st.dataframe() (avoids LargeUtf8 Arrow error)."""
+def render_df_as_table(df: pd.DataFrame) -> None:
+    """Render a DataFrame as an HTML table to avoid Streamlit Arrow LargeUtf8 serialization errors."""
     if df.empty:
-        return df
-    out = df.copy()
-    for col in out.columns:
-        dtype_str = str(out[col].dtype)
-        # PyArrow/pandas 2 string dtypes can serialize as LargeUtf8, which older Streamlit doesn't support
-        if "string" in dtype_str.lower():
-            out[col] = out[col].astype(object)
-    return out
+        st.caption("(No rows)")
+        return
+    html = df.to_html(index=False, classes="dataframe", escape=True)
+    table_css = """
+    <style>
+    .dataframe { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+    .dataframe th, .dataframe td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
+    .dataframe th { background-color: #f0f2f6; }
+    </style>
+    """
+    st.markdown(
+        table_css + f'<div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">{html}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def read_uploaded_file(upload) -> pd.DataFrame:
@@ -149,7 +155,7 @@ def main() -> None:
         return
 
     st.subheader("Raw Data Preview")
-    st.dataframe(dataframe_for_display(df_raw.head(50)))
+    render_df_as_table(df_raw.head(50))
 
     # Transform: dedupe + validation + fuzzy conflicts
     try:
@@ -178,11 +184,11 @@ def main() -> None:
         st.metric("Invalid records (validation)", total_invalid)
 
     st.subheader("Cleaned Clients Preview")
-    st.dataframe(dataframe_for_display(df_valid.head(50)))
+    render_df_as_table(df_valid.head(50))
 
     if not df_invalid.empty:
         st.subheader("Invalid Records (Pydantic Validation)")
-        st.dataframe(dataframe_for_display(df_invalid.head(50)))
+        render_df_as_table(df_invalid.head(50))
 
     if not conflicts.empty:
         st.subheader("Fuzzy Name Conflicts")
@@ -190,7 +196,7 @@ def main() -> None:
             "These rows have very similar names and may represent the same client. "
             "Review before finalizing."
         )
-        st.dataframe(dataframe_for_display(conflicts.head(100)))
+        render_df_as_table(conflicts.head(100))
 
     excel_bytes = build_excel_workbook(df_valid, dupes, conflicts)
 
