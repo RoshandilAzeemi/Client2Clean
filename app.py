@@ -1,8 +1,10 @@
+import html
 import io
 from typing import List, Tuple
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from pydantic import BaseModel, EmailStr, ValidationError, field_validator
 from rapidfuzz import fuzz
 
@@ -24,15 +26,34 @@ class ClientRecord(BaseModel):
 
 
 def render_df_as_table(df: pd.DataFrame) -> None:
-    """Render a DataFrame as a table without using Arrow (avoids LargeUtf8 and raw HTML display)."""
+    """Render a DataFrame as HTML in an iframe to avoid Streamlit Arrow LargeUtf8 errors."""
     if df.empty:
         st.caption("(No rows)")
         return
-    # Convert to plain Python str per cell so Streamlit doesn't use Arrow LargeUtf8
-    out = pd.DataFrame(
-        {col: [str(x) if pd.notna(x) else "" for x in df[col]] for col in df.columns}
-    )
-    st.table(out)
+    # Build HTML table manually (escape so no Arrow is used)
+    rows = []
+    rows.append("<tr>" + "".join(f"<th>{html.escape(str(c))}</th>" for c in df.columns) + "</tr>")
+    for _, row in df.iterrows():
+        cells = "".join(
+            f"<td>{html.escape(str(x)) if pd.notna(x) else ''}</td>" for x in row
+        )
+        rows.append(f"<tr>{cells}</tr>")
+    table_html = "<table class='st-df-table'>" + "".join(rows) + "</table>"
+    full_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8">
+    <style>
+    .st-df-table {{ border-collapse: collapse; width: 100%; font-size: 14px; }}
+    .st-df-table th, .st-df-table td {{ border: 1px solid #ddd; padding: 8px 12px; text-align: left; }}
+    .st-df-table th {{ background: #f0f2f6; }}
+    .st-df-wrap {{ overflow-x: auto; max-height: 400px; overflow-y: auto; padding: 8px; }}
+    </style>
+    </head>
+    <body><div class="st-df-wrap">{table_html}</div></body>
+    </html>
+    """
+    components.html(full_html, height=min(420, 52 + len(df) * 28), scrolling=True)
 
 
 def read_uploaded_file(upload) -> pd.DataFrame:
