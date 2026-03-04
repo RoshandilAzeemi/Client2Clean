@@ -44,10 +44,11 @@ def render_df_as_table(df: pd.DataFrame) -> None:
     <html>
     <head><meta charset="utf-8">
     <style>
-    .st-df-table {{ border-collapse: collapse; width: 100%; font-size: 14px; }}
-    .st-df-table th, .st-df-table td {{ border: 1px solid #ddd; padding: 8px 12px; text-align: left; }}
-    .st-df-table th {{ background: #f0f2f6; }}
-    .st-df-wrap {{ overflow-x: auto; max-height: 400px; overflow-y: auto; padding: 8px; }}
+    body {{ background: #ffffff; color: #262730; }}
+    .st-df-table {{ border-collapse: collapse; width: 100%; font-size: 14px; background: #ffffff; color: #262730; }}
+    .st-df-table th, .st-df-table td {{ border: 1px solid #ddd; padding: 8px 12px; text-align: left; background: #ffffff; color: #262730; }}
+    .st-df-table th {{ background: #f0f2f6; color: #262730; }}
+    .st-df-wrap {{ overflow-x: auto; max-height: 400px; overflow-y: auto; padding: 8px; background: #ffffff; color: #262730; }}
     </style>
     </head>
     <body><div class="st-df-wrap">{table_html}</div></body>
