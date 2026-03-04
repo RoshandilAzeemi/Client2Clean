@@ -23,6 +23,19 @@ class ClientRecord(BaseModel):
         return digits
 
 
+def dataframe_for_display(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert DataFrame to dtypes safe for st.dataframe() (avoids LargeUtf8 Arrow error)."""
+    if df.empty:
+        return df
+    out = df.copy()
+    for col in out.columns:
+        dtype_str = str(out[col].dtype)
+        # PyArrow/pandas 2 string dtypes can serialize as LargeUtf8, which older Streamlit doesn't support
+        if "string" in dtype_str.lower():
+            out[col] = out[col].astype(object)
+    return out
+
+
 def read_uploaded_file(upload) -> pd.DataFrame:
     """Read uploaded file (.csv, .xlsx, .xls, .json) into a DataFrame."""
     name = upload.name.lower()
@@ -136,7 +149,7 @@ def main() -> None:
         return
 
     st.subheader("Raw Data Preview")
-    st.dataframe(df_raw.head(50))
+    st.dataframe(dataframe_for_display(df_raw.head(50)))
 
     # Transform: dedupe + validation + fuzzy conflicts
     try:
@@ -165,11 +178,11 @@ def main() -> None:
         st.metric("Invalid records (validation)", total_invalid)
 
     st.subheader("Cleaned Clients Preview")
-    st.dataframe(df_valid.head(50))
+    st.dataframe(dataframe_for_display(df_valid.head(50)))
 
     if not df_invalid.empty:
         st.subheader("Invalid Records (Pydantic Validation)")
-        st.dataframe(df_invalid.head(50))
+        st.dataframe(dataframe_for_display(df_invalid.head(50)))
 
     if not conflicts.empty:
         st.subheader("Fuzzy Name Conflicts")
@@ -177,7 +190,7 @@ def main() -> None:
             "These rows have very similar names and may represent the same client. "
             "Review before finalizing."
         )
-        st.dataframe(conflicts.head(100))
+        st.dataframe(dataframe_for_display(conflicts.head(100)))
 
     excel_bytes = build_excel_workbook(df_valid, dupes, conflicts)
 

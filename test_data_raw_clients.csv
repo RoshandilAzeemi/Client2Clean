@@ -1,0 +1,25 @@
+Client Name,Email,Phone
+John Smith,john.smith@example.com,5551234567
+  John Smith  ,JOHN.SMITH@EXAMPLE.COM,(555) 123-4567
+Jane Doe,jane.doe@test.org,5559876543
+Jane Doe,jane.doe@test.org,555-987-6543
+Bob Wilson,bob@company.co,5551112233
+bob wilson,bob@company.co,5551112233
+Bad Email User,notanemail,5552223344
+Another Bad,missing@domain,5553334455
+No At Sign,user.gmail.com,5554445566
+Empty Email,,5555556677
+Short Phone,short@example.com,123
+Long Phone,long@example.com,55512345678901
+Letters in Phone,letters@example.com,555-CALL-NOW
+Empty Phone,nophone@example.com,
+Michael Johnson,michael.j@example.com,5556667788
+Mike Johnson,mike.j@other.com,5557778899
+Sarah Williams,sarah.w@example.com,5558889900
+Sara Williams,sara.w@example.com,5559990011
+Robert Brown,robert.b@example.com,5550001122
+Rob Brown,rob.brown@example.com,5551112234
+  Alice   Cooper  ,  alice.cooper@example.com  , 5552223334 
+ALICE COOPER,alice.cooper@example.com,+1 555-222-3334
+David Lee,david.lee@test.com,1-555-333-4445
+David Lee,david.lee@test.com,15553334445
