@@ -24,22 +24,15 @@ class ClientRecord(BaseModel):
 
 
 def render_df_as_table(df: pd.DataFrame) -> None:
-    """Render a DataFrame as an HTML table to avoid Streamlit Arrow LargeUtf8 serialization errors."""
+    """Render a DataFrame as a table without using Arrow (avoids LargeUtf8 and raw HTML display)."""
     if df.empty:
         st.caption("(No rows)")
         return
-    html = df.to_html(index=False, classes="dataframe", escape=True)
-    table_css = """
-    <style>
-    .dataframe { border-collapse: collapse; width: 100%; font-size: 0.9em; }
-    .dataframe th, .dataframe td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
-    .dataframe th { background-color: #f0f2f6; }
-    </style>
-    """
-    st.markdown(
-        table_css + f'<div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">{html}</div>',
-        unsafe_allow_html=True,
+    # Convert to plain Python str per cell so Streamlit doesn't use Arrow LargeUtf8
+    out = pd.DataFrame(
+        {col: [str(x) if pd.notna(x) else "" for x in df[col]] for col in df.columns}
     )
+    st.table(out)
 
 
 def read_uploaded_file(upload) -> pd.DataFrame:
