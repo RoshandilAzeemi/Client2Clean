@@ -108,7 +108,7 @@ def build_excel_workbook(
 
 def main() -> None:
     st.set_page_config(page_title="Client Deduper", layout="wide")
-    st.title("Client Deduper")
+    st.title("Client2Clean")
     st.markdown(
         "Upload your messy client list, and this app will detect duplicates, "
         "validate records, and give you a clean Excel export."
