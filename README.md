@@ -1,4 +1,3 @@
-Client2Clean
 Client2Clean is a professional-grade ETL (Extract, Transform, Load) pipeline designed to solve the common business problem of "Data Decay." It automates the process of cleaning, validating, and deduplicating messy client databases, transforming them into a verified "Golden Record."
 
 Initially prototyped during my internship at Sohail Akhtar Enterprise Inc., this tool has evolved into a full-scale web application built with Python, Streamlit, and Pydantic.
