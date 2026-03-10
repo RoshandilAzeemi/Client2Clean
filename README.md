@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🧹 Client2Clean
 
@@ -914,4 +914,4 @@ For larger datasets (100K+ rows), the architecture would need to be extended wit
 *If this tool saved you time cleaning client data, consider giving it a ⭐ on GitHub.*
 
 </div>
-]]>
+
