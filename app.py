@@ -2,11 +2,12 @@ import html
 import io
 from typing import List, Tuple
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 from pydantic import BaseModel, EmailStr, ValidationError, field_validator
-from rapidfuzz import fuzz
+from rapidfuzz import fuzz, process
 
 from src.dedupe_clients import dedupe_clients
 
@@ -100,31 +101,36 @@ def fuzzy_conflicts_on_name(
     df: pd.DataFrame, name_col: str = "Client Name", threshold: int = 90
 ) -> pd.DataFrame:
     """
-    Simple fuzzy match on client name to detect potential conflicts.
+    Fuzzy match on client name to detect potential conflicts.
 
-    This runs an O(n^2) comparison on the name column, which is fine
-    for small/medium client lists typical of manual uploads.
+    Scores all pairs in one vectorized rapidfuzz.process.cdist call
+    instead of calling fuzz.token_set_ratio once per pair in a Python
+    loop, which is the bottleneck at larger row counts.
     """
     if name_col not in df.columns:
         return pd.DataFrame()
 
-    conflicts: List[dict] = []
     names = df[name_col].astype(str).fillna("").tolist()
-    for i in range(len(names)):
-        for j in range(i + 1, len(names)):
-            score = fuzz.token_set_ratio(names[i], names[j])
-            if score >= threshold:
-                conflicts.append(
-                    {
-                        "index_1": i,
-                        "index_2": j,
-                        "name_1": names[i],
-                        "name_2": names[j],
-                        "similarity_score": score,
-                    }
-                )
+    if len(names) < 2:
+        return pd.DataFrame()
 
-    return pd.DataFrame(conflicts)
+    scores = process.cdist(
+        names, names, scorer=fuzz.token_set_ratio, workers=-1, dtype=np.float64
+    )
+
+    # Only keep the upper triangle (i < j) so each pair is reported once.
+    mask = np.triu(np.ones(scores.shape, dtype=bool), k=1) & (scores >= threshold)
+    i_idx, j_idx = np.where(mask)
+
+    return pd.DataFrame(
+        {
+            "index_1": i_idx,
+            "index_2": j_idx,
+            "name_1": [names[i] for i in i_idx],
+            "name_2": [names[j] for j in j_idx],
+            "similarity_score": scores[i_idx, j_idx],
+        }
+    )
 
 
 def build_excel_workbook(
